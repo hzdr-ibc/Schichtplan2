@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        /* Style for the table */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+            z-index: 1; /* Ensure header stays above other content */
+        }
+        
+        /* Define alternating row colors */
+        .white-row {
+            background-color: #ffffff; /* White background */
+        }
+        
+        .grey-row {
+            background-color: #f2f2f2; /* Grey background */
+        }
+
+        .yellow-row {
+            background-color: #FFEFBF; /* Yellow background */
+        }
+        
+        .red-row {
+            background-color: #FFBFBF; /* Yellow background */
+        }
+        
+        /* Ensure the body and html take full height */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Example header styling to calculate height */
+        h1 {
+            height: 50px; /* Example fixed height */
+            margin: 0;
+            padding: 10px;
+            background-color: #f2f2f2;
+        }
+        
+        /* Ensure the table container scrolls properly */
+        #table-container {
+            height: calc(100vh - 20px); /* Adjust height for header */
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="table-container"></div>
+
+    <script>
+        // Function to fetch and display CSV
+        function fetchAndDisplayCSV(url) {
+            Papa.parse(url, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    console.log(results); // Check the parsed data in the console
+                    createTable(results.data);
+                },
+                error: function(error) {
+                    console.error("Error fetching or parsing CSV:", error);
+                }
+            });
+        }
+
+        // Function to format data
+        function formatData(value, key) {
+            // Example: Format dates, numbers, or custom transformations
+            // Example: Format dates, numbers, or custom transformations
+            if (key === 'Datum') {
+                console.log([key, value]);
+                const parts = value.split("/"); // Split date string by "/"
+                const day = parts[1]; // Extract day
+                const month = parts[0]; // Extract month
+                // Format day.month
+                return `${day}.${month}`;
+            }
+            // Add more formatting rules as needed
+            return value;
+        }
+
+        // Function to create a table from the parsed data
+        function createTable(data) {
+            const tableContainer = document.getElementById('table-container');
+            const table = document.createElement('table');
+
+            // Create the table header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            Object.keys(data[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.innerHTML = key;  // Use innerHTML for header to allow HTML content
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create the table body
+            const tbody = document.createElement('tbody');
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                // Check if WT column is "Sa" and apply yellow background class
+                if (row['WT'] && row['WT'].includes("Sa")) {
+                    tr.classList.add('yellow-row'); // Apply yellow background class
+                } else if (row['WT'] && row['WT'].includes("So")) {
+                    tr.classList.add('red-row'); // Apply red background class
+                }
+                //else{
+                    // Alternate white and grey backgrounds
+                    //const rowIndex = tbody.children.length;
+                    //tr.classList.add(rowIndex % 15 < 8 ? 'white-row' : 'grey-row');
+                //}
+                Object.entries(row).forEach(([key, value]) => {
+                    const td = document.createElement('td');
+                    td.innerHTML = formatData(value, key);  // Use innerHTML to render formatted content
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+
+            // Clear any existing content and append the table to the container
+            tableContainer.innerHTML = '';
+            tableContainer.appendChild(table);
+        }
+
+        // Call the function with your CSV URL
+        fetchAndDisplayCSV('https://share.ninox.com/ljsgdsyaonjbynyi0fqxnrw3ukjph40w7jgy'); // Replace with your CSV URL
+    </script>
+</body>
+</html>
