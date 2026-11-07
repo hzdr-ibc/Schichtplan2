@@ -1,156 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <style>
-        /* Style for the table */
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: #f2f2f2;
-            position: sticky;
-            top: 0;
-            z-index: 1; /* Ensure header stays above other content */
-        }
-        
-        /* Define alternating row colors */
-        .white-row {
-            background-color: #ffffff; /* White background */
-        }
-        
-        .grey-row {
-            background-color: #f2f2f2; /* Grey background */
-        }
-
-        .yellow-row {
-            background-color: #FFEFBF; /* Yellow background */
-        }
-        
-        .red-row {
-            background-color: #FFBFBF; /* Yellow background */
-        }
-        
-        /* Ensure the body and html take full height */
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        
-        /* Example header styling to calculate height */
-        h1 {
-            height: 50px; /* Example fixed height */
-            margin: 0;
-            padding: 10px;
-            background-color: #f2f2f2;
-        }
-        
-        /* Ensure the table container scrolls properly */
-        #table-container {
-            height: calc(100vh - 20px); /* Adjust height for header */
-            overflow-y: auto;
-            border: 1px solid #ddd;
-        }
-        
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>IBC Schichtplan</title>
+<style>
+:root { color-scheme: light dark; --bg: #fff; --fg: #1d2939; --line: #e4e7ec; --head: #f2f4f7; --alt: #f9fafb; --muted: #667085; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161a23; --fg: #e4e7ec; --line: #333845; --head: #1f2430; --alt: #1b1f29; --muted: #98a2b3; } }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 12px; }
+h1 { margin: 0; font-size: 17px; font-weight: 600; }
+input[type=search] { flex: 1 1 160px; max-width: 280px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; }
+.wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { position: sticky; top: 0; z-index: 1; background: var(--head); font-weight: 600; white-space: nowrap; }
+tbody tr:nth-child(even):not([style]) { background: var(--alt); }
+tr.group td { background: var(--head); font-weight: 600; padding-top: 10px; }
+.count { color: var(--muted); font-weight: 400; margin-left: 4px; }
+.chip { display: inline-block; border-radius: 5px; padding: 0 6px; margin: 1px 0; white-space: nowrap; }
+.swatch { display: inline-block; width: 18px; height: 14px; border-radius: 3px; vertical-align: middle; }
+a { color: inherit; }
+footer, .note { color: var(--muted); font-size: 12px; padding: 8px 12px; }
+</style>
 </head>
 <body>
-    <div id="table-container"></div>
-
-    <script>
-        // Function to fetch and display CSV
-        function fetchAndDisplayCSV(url) {
-            Papa.parse(url, {
-                download: true,
-                header: true,
-                complete: function(results) {
-                    console.log(results); // Check the parsed data in the console
-                    createTable(results.data);
-                },
-                error: function(error) {
-                    console.error("Error fetching or parsing CSV:", error);
-                }
-            });
-        }
-
-        // Function to format data
-        function formatData(value, key) {
-            // Example: Format dates, numbers, or custom transformations
-            // Example: Format dates, numbers, or custom transformations
-            if (key === 'Datum') {
-                console.log([key, value]);
-                const parts = value.split("/"); // Split date string by "/"
-                const day = parts[1]; // Extract day
-                const month = parts[0]; // Extract month
-                // Format day.month
-                return `${day}.${month}`;
-            }
-            // Add more formatting rules as needed
-            return value;
-        }
-
-        // Function to create a table from the parsed data
-        function createTable(data) {
-            const tableContainer = document.getElementById('table-container');
-            const table = document.createElement('table');
-
-            // Create the table header
-            const thead = document.createElement('thead');
-            const headerRow = document.createElement('tr');
-            Object.keys(data[0]).forEach(key => {
-                const th = document.createElement('th');
-                th.innerHTML = key;  // Use innerHTML for header to allow HTML content
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-
-            // Create the table body
-            const tbody = document.createElement('tbody');
-            data.forEach(row => {
-                const tr = document.createElement('tr');
-                // Check if WT column is "Sa" and apply yellow background class
-                if (row['WT'] && row['WT'].includes("Sa")) {
-                    tr.classList.add('yellow-row'); // Apply yellow background class
-                } else if (row['WT'] && row['WT'].includes("So")) {
-                    tr.classList.add('red-row'); // Apply red background class
-                }
-                //else{
-                    // Alternate white and grey backgrounds
-                    //const rowIndex = tbody.children.length;
-                    //tr.classList.add(rowIndex % 15 < 8 ? 'white-row' : 'grey-row');
-                //}
-                Object.entries(row).forEach(([key, value]) => {
-                    const td = document.createElement('td');
-                    td.innerHTML = formatData(value, key);  // Use innerHTML to render formatted content
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody);
-
-            // Clear any existing content and append the table to the container
-            tableContainer.innerHTML = '';
-            tableContainer.appendChild(table);
-        }
-
-        // Call the function with your CSV URL
-        fetchAndDisplayCSV('https://share.ninox.com/ljsgdsyaonjbynyi0fqxnrw3ukjph40w7jgy'); // Replace with your CSV URL
-    </script>
+<header><h1>IBC Schichtplan</h1><input type="search" placeholder="Suchen" aria-label="Suchen" oninput="filterRows(this.value)"></header>
+<div class="wrap"><table><thead><tr><th>KW</th><th>Datum</th><th>WT</th><th>Ferien</th><th>Andreas</th><th>Axel</th><th>Heike</th><th>Jürgen</th><th>Leo</th><th>Manuel</th><th>Olaf</th><th>Robert</th><th>Andre</th><th>René</th><th>Uli</th><th>Shavkat</th><th>Ausmessperson</th></tr></thead><tbody><tr><td>38</td><td>14.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mo</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td></tr>
+<tr><td>38</td><td>15.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Di</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td></tr>
+<tr><td>38</td><td>16.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mi</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td></tr>
+<tr><td>38</td><td>17.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Do</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td></tr>
+<tr><td>38</td><td>18.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Fr</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td></tr>
+<tr style="background:#FFEFBF;color:#1d2939"><td>38</td><td>19.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #FFEFBF;">Sa</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr style="background:#FFBFBF;color:#1d2939"><td>38</td><td>20.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #FFBFBF;">So</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td></td><td></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td></td><td></td><td></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td></tr>
+<tr><td>39</td><td>21.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mo</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>39</td><td>22.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Di</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>39</td><td>23.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mi</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>39</td><td>24.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Do</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>39</td><td>25.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Fr</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr style="background:#FFEFBF;color:#1d2939"><td>39</td><td>26.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #FFEFBF;">Sa</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td></td><td></td><td></td><td></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr style="background:#FFBFBF;color:#1d2939"><td>39</td><td>27.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #FFBFBF;">So</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>40</td><td>28.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mo</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>40</td><td>29.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Di</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>40</td><td>30.09.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mi</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>40</td><td>01.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Do</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>40</td><td>02.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Fr</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr style="background:#FFEFBF;color:#1d2939"><td>40</td><td>03.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #FFEFBF;">Sa</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td></td><td></td><td></td><td></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #00FF3F">U</span></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr style="background:#FFBFBF;color:#1d2939"><td>40</td><td>04.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #FFBFBF;">So</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>41</td><td>05.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mo</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>41</td><td>06.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Di</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td></td></tr>
+<tr><td>41</td><td>07.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Mi</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td>Sophie Worm</td></tr>
+<tr><td>41</td><td>08.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Do</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #BF8F00">3</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td></td><td></td><td>Sophie Worm</td></tr>
+<tr><td>41</td><td>09.10.2026</td><td>  <div style= "padding-left: 5px; padding-right: 5px; text-color: "white"; background-color: #BFFFCF;">Fr</div>  </td><td>  <div style= "border-radius: 5px; padding-left: 5px; padding-right: 5px; color: white; text-align: center; background-color: ;"></div>  </td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">Z1</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">R/RB</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFDF7F">1</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #B7C0DB">WR</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBF00">2</span> <span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #DFDFDF">FWIZ-I</span></td><td></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #FFBFBF">UA</span></td><td><span style= "border-radius: 5px; padding-left: 6px; padding-right: 6px; background-color: #EC87E2">SSB­­­­­­–RB­</span></td><td></td><td>Sophie Worm</td></tr></tbody></table></div>
+<footer>Stand: 07.11.2026 22:40</footer>
+<script>
+function filterRows(q) {
+  q = q.trim().toLowerCase();
+  document.querySelectorAll('tbody tr').forEach(function (tr) {
+    tr.hidden = !!q && !tr.classList.contains('group') && tr.textContent.toLowerCase().indexOf(q) < 0;
+  });
+}
+</script>
 </body>
 </html>
